@@ -53,21 +53,58 @@ export default function Room() {
 
   // Start camera then connect
   useEffect(() => {
-    let mounted = true;
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then(stream => {
-        if (!mounted) { stream.getTracks().forEach(t => t.stop()); return; }
-        setLocalStream(stream);
-        connect(stream);
-      })
-      .catch(err => {
-        console.warn('Media error, joining audio-only:', err);
-        navigator.mediaDevices.getUserMedia({ audio: true })
-          .then(stream => { if (!mounted) return; setLocalStream(stream); connect(stream); })
-          .catch(() => connect(null));
+  let mounted = true;
+  let currentStream;
+
+  const startMedia = async () => {
+    try {
+      // 🔴 Stop old stream if exists
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
+
+      // 🟢 Start fresh stream
+      currentStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
       });
-    return () => { mounted = false; };
-  }, [connect]);
+
+      if (!mounted) {
+        currentStream.getTracks().forEach(t => t.stop());
+        return;
+      }
+
+      setLocalStream(currentStream);
+      connect(currentStream);
+
+    } catch (err) {
+      console.warn('Media error, joining audio-only:', err);
+
+      try {
+        currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        if (!mounted) return;
+
+        setLocalStream(currentStream);
+        connect(currentStream);
+
+      } catch {
+        connect(null);
+      }
+    }
+  };
+
+  startMedia();
+
+  // 🧹 CLEANUP (VERY IMPORTANT)
+  return () => {
+    mounted = false;
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop());
+    }
+  };
+
+}, [connect]);
 
   // New peer toast
   useEffect(() => {

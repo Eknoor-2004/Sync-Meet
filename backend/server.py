@@ -185,9 +185,13 @@ async def handle(ws):
                 del rooms[room_id]
 
 
+import os
+
 async def main():
-    log.info("🚀 Signaling server starting on ws://0.0.0.0:8765")
-    async with websockets.serve(handle, "0.0.0.0", 8765):
+    PORT = int(os.environ.get("PORT", 8765))
+    log.info(f"🚀 Signaling server starting on port {PORT}")
+
+    async with websockets.serve(handle, "0.0.0.0", PORT):
         await asyncio.Future()
 
 
