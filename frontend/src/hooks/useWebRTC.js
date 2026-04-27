@@ -183,7 +183,7 @@ export function useWebRTC({ roomId, myName, onChat, onReaction, onRaiseHand }) {
     if (wsRef.current && wsRef.current.readyState < WebSocket.CLOSING) return;
 
     localStreamRef.current = stream;
-    const WS_URL = process.env.REACT_APP_WS_URL || `ws://${window.location.hostname}:8765`;
+    const WS_URL = "wss://sync-meet-8f9e.onrender.com";
     const ws = new WebSocket(WS_URL);
     wsRef.current = ws;
 
